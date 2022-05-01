@@ -1,0 +1,26 @@
+{{- if .Values.exporter.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "cassandra.fullname" . }}-exporter
+  labels:
+    app: {{ template "cassandra.name" . }}
+    chart: {{ template "cassandra.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- if .Values.exporter.service.annotations }}
+  annotations:
+{{ toYaml .Values.exporter.service.annotations | indent 4 }}
+{{- end }}
+spec:
+  clusterIP: None
+  type: {{ .Values.exporter.service.type }}
+  ports:
+    - name: metrics
+      port: {{ .Values.exporter.port }}
+      targetPort: {{ .Values.exporter.port }}
+      protocol: TCP
+  selector:
+    app: {{ template "cassandra.name" . }}
+    release: {{ .Release.Name }}
+{{- end }}

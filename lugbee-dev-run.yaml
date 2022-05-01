@@ -1,0 +1,84 @@
+name: Lugbee-CI-Dev-[lb-account]
+
+on:
+  create:
+    tags:
+      - 'v*.*.*'
+
+env:
+  GITHUB_SHA: ${{ github.sha }}
+  REGISTRY_HOSTNAME: gcr.io
+  PROJECT_NAME: tecore-dev
+ # PROJECT_NAMESPACE: lb-account
+  IMAGE_NAME: lams
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+jobs:
+  lb-account-job:
+    name: Setup, Build, and Publish
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: "STEP-1 : Starting Workflow"
+      uses: act10ns/slack@v1
+      with:
+        status: 'Staring Workflow :rocket:'
+        channel: '#lugbee-actions'
+      if: always()
+
+    - name: "STEP-2: Check Out Repo"
+      id: "checkout"
+      uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GIT_TOKEN }}
+        ref: master
+
+
+  
+    - name: "STEP-6: Setup Google Cloud CLI"
+      id: "setup-gcloud"
+      uses: google-github-actions/setup-gcloud@master
+      with:
+        project_id: ${{ env.PROJECT_NAME }}
+        service_account_key: ${{ secrets.GCR_DEV_KEY }}
+        export_default_credentials: false
+
+    - name: "STEP-7: Build & Publish Container Image"
+      id: "build-and-push-docker"
+      run: |
+        sudo apt install grep sed
+        gcloud auth configure-docker
+        DOCKER_BUILDKIT=1 docker build -t "$REGISTRY_HOSTNAME"/"$PROJECT_NAME"/"$PROJECT_NAMESPACE"/"$IMAGE_NAME":dev-"$(echo ${GITHUB_SHA} | cut -c1-7)" .
+        cat ./charts/dev/$IMAGE_NAME/values.yaml | grep "tag:" | awk 'NR >= 1 && NR <=1 {print $2}' > ~/.current_tag
+        export CURRENT_IMAGE_TAG="$(cat ~/.current_tag)"
+        echo $CURRENT_IMAGE_TAG
+        echo "current_tag=$CURRENT_IMAGE_TAG" >> $GITHUB_ENV
+        docker images | awk 'NR >= 2 && NR <=2 {print $2}' > ~/.latest_tag
+        export LATEST_IMAGE_TAG="$(cat ~/.latest_tag)"
+        echo $LATEST_IMAGE_TAG
+        echo "latest_tag=$LATEST_IMAGE_TAG" >> $GITHUB_ENV
+        docker tag "$REGISTRY_HOSTNAME"/"$PROJECT_NAME"/"$PROJECT_NAMESPACE"/"$IMAGE_NAME":dev-"$(echo ${GITHUB_SHA} | cut -c1-7)" "$REGISTRY_HOSTNAME"/"$PROJECT_NAME"/"$PROJECT_NAMESPACE"/"$IMAGE_NAME":dev-"$(echo ${GITHUB_SHA} | cut -c1-7)"
+        docker push "$REGISTRY_HOSTNAME"/"$PROJECT_NAME"/"$PROJECT_NAMESPACE"/"$IMAGE_NAME":dev-"$(echo ${GITHUB_SHA} | cut -c1-7)"
+        
+
+    
+    - name: "STEP-10: Commit & Push changes"
+      id: "commit-and-push-changes"
+      run: |
+        git config user.name lugbee-dev-gitops
+        git config user.email lb-gitops@github.com
+        git add .
+        git commit -m 'Updated Charts to ${{ env.latest_tag }}'
+        git push
+
+    - name: "STEP-11: Ending Workflow"
+      uses: act10ns/slack@v1
+      with:
+        status: ${{ job.status }}
+        steps: ${{ toJson(steps) }}
+        channel: '#lugbee-actions'
+      if: always()

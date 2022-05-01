@@ -1,0 +1,46 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ template "wallet-service-nodejs.fullname" . }}
+  labels:
+    app: {{ template "wallet-service-nodejs.name" . }}
+    chart: {{ template "wallet-service-nodejs.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  gateways:
+  {{- range .Values.gateway.selector }}
+  - {{ . }}
+  {{- end }}
+  hosts:
+  {{- range .Values.gateway.hosts }}
+  - {{ . }}
+  {{- end }}
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: {{ template "wallet-service-nodejs.fullname" . }}
+        port:
+          number: {{ .Values.service.port }}
+    corsPolicy:
+      allowOrigin:
+      {{- range .Values.corsPolicy.allowOrigin }}
+      - {{ . }}
+      {{- end }}
+      allowMethods:
+      {{- range .Values.corsPolicy.allowMethods}}
+      - {{ . }}
+      {{- end }}
+      allowCredentials: {{ .Values.corsPolicy.allowCredentials }}
+      allowHeaders:
+      {{- range .Values.corsPolicy.allowHeaders }}
+      - {{ . }}
+      {{- end }}
+      exposeHeaders:
+      {{- range .Values.corsPolicy.exposeHeaders }}
+      - {{ . }}
+      {{- end }}
+      maxAge: {{ .Values.corsPolicy.maxAge }}

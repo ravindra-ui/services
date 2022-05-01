@@ -1,0 +1,42 @@
+turn-4rz67 >>>>  35.233.197.108
+
+turn-g5db2 >>>>>  
+
+
+
+
+
+-------------------------------------
+
+
+Non-authoritative answer:
+Name:   turn.nynja.net
+Address: 34.82.141.147
+Name:   turn.nynja.net
+Address: 34.83.156.0
+Name:   turn.nynja.net
+Address: 35.233.197.108
+
+
+----------------------------------------------------------
+
+tecore@DESKTOP-79T2PLQ:~$ kubectl exec pod/turn-2kfcg -it -n turn -- cat /etc/coturn/turnserver.conf | grep '^external-ip' | cut -d '=' -f 2
+turn-2kfcg
+34.82.141.147
+tecore@DESKTOP-79T2PLQ:~$ kubectl exec pod/turn-4rz67 -it -n turn -- cat /etc/coturn/turnserver.conf | grep '^external-ip' | cut -d '=' -f 2
+turn-4rz67
+35.233.197.108
+tecore@DESKTOP-79T2PLQ:~$ kubectl exec pod/turn-tmbp8 -it -n turn --
+
+
+tecore@DESKTOP-79T2PLQ:~$ kubectl exec pod/turn-tmbp8 -it -n turn -- cat /etc/coturn/turnserver.conf | grep '^external-ip' | cut -d '=' -f 2
+---------------------------------------------------------------------------------------------------------------------------------
+turn-tmbp8
+35.247.44.246
+
+turn-2kfcg
+34.82.141.147
+
+turn-4rz67
+35.233.197.108
+

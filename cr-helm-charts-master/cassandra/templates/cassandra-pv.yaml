@@ -1,0 +1,24 @@
+{{- $root := . -}}
+{{- $cluster_size := default 1 .Values.config.cluster_size | int -}}
+{{- $global := . }}
+{{- range $i, $e := until $cluster_size }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cdata-{{ $i }}
+  labels:
+    type: local
+    app: {{ template "cassandra.name" $global }}
+    chart: {{ template "cassandra.chart" $global }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}    
+spec:
+  capacity:
+    storage: {{ $root.Values.persistence.size }}
+  accessModes:
+    - {{ $root.Values.persistence.accessMode }}
+  hostPath:
+    path: {{ $root.Values.persistence.hostPath }}/cdata-{{ $i }}
+  persistentVolumeReclaimPolicy: {{ $root.Values.persistence.persistentVolumeReclaimPolicy }}
+{{- end }}

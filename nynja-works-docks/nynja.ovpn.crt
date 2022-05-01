@@ -1,0 +1,148 @@
+client
+nobind
+dev tun
+cipher aes-256-cbc
+tls-client
+auth-user-pass
+auth-nocache
+comp-lzo
+<key>
+-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQChB3UbzL3izOMA
+uXYBbXz+KC6FKgefFZHvKwul96zDobp9AEZXXiExPhcXKq8OUj2dNPVX4e18CZwp
+evt8Ip+gxM4BAvprPW//nlzq8529zFHN68ipah30XfQgmkcLCs7wqTCsuUCwB80l
+Mfkok4H+7O6Kbx75Q14pcBwax1ublLu3m9U+wg+R58Ul9ZZem/UslUlJVzvPNsXn
+5+kzZyjgLzIAvLPN7qEqMHOgiDRXrbRC86vZJ+BMz6LYJFKr2G1jeK9U3L609Wsp
+o7BbdLiWI9yOy+sLPByxJEOh2sWBULL7IuYze0hAwZ7AF3ahphpNI0FSFoxLeh6e
+YMXP/y2BAgMBAAECggEBAKDSnt413EtgDzMRBs8kN1pqbROnx1bVpxszZX3LX6s+
+oc7n8FifdQ0GEu+bPJxT/J8+Xe34gUOJIYK4BeSTe9OH2qpd/BYQlQO5eNlal2cQ
+YX8EhjLU/beqAgBxtJRNpiHrB+bpWba1A+irAUnKEGG25gIyOr/9zVQbWKZSBqbZ
+DhIxNK7iRC8P0hP5GZkBA143DKZwbrlXzmKApQTF8uTQeMXL7MlOTbnL0EX3/CiI
+cUMLo1CgbYUc0VkX+yXpWBON0sKG6IvFRq+bAlZd45oGdb0uaJL5Sb2RPWYneWza
+xsQwKVD7IzUd49PlXEzt91P+WuOZcngtVhTWOMdFPPECgYEAzQXjN0L7/usZmKK2
+P/1g1OMDIezPHJQi+bhN8TDe1hh0xgmTSFmHdC9VoZOAZQbWa2pF7W4fJdC611OO
+SMQqu98IjPpAWL9Z085p1GKTYfTfTWkFWc0zuSRyDjVBca3k9YP/DKhQjMXFPQ9R
+w1ze9fiMhNO9lHu/rM0DtDiwvb0CgYEAyRFGUg0QuMn9k73sLtlPcoD/tQP4U3I7
+Jjd7fpvBCH/hwyInqU05Yhn6XzYD1ubITDFGkZs9nXwjedEvi27IAQ9URAEru1ud
+16Eu2HVdeOh3lO0CA8LHkNGEiqbWVgbOMsQ06JHlddUmhGg9/xMQwfC6rUN0ia5l
+1SBjYwY3YRUCgYAy5F8+fHYpFRrJdLpgr/i1X5SLe0j+AxebfVB7qnHmGzQBZKcW
+soKZKJbNANxCN6xKBZtOEKPSszlt8ePD1E33TKnGtOf8H6OgnABRJBcJnctAX+1g
+GTvZnV5igH26RjwrZZSOA8na58zKF19oa0k9LXFUF2tbzEwMDOf6eIgG0QKBgQDD
+4F1WL747lyO+m0YMec2I6hyx1pVDjcQLvf9D3y5VPmfMdmiW6VFevZoIyRFCeP9m
+Ipbx4H9M/ZN96AjeV+TmC2329gEJe/4wA6kkXGncEPP2FFJjIYzTCxmJDXE+y1Bz
+amt0qjUU7rqgQQEsjgFEPmVNx6ovOsOftfa8kGDA5QKBgFPR0sp4PfM31NH/aHAq
+ozAtp5EW9KlM2wwtinIikhTP1X/itETYUzpSEqjOg18k4RyM2YdtDHapCNAhd2D2
+P3nL0m5HgYtBnFi7HmXRsa0p8jZS+29NpyLTl3r0dZK8LWhXExYjzs57GrzzhUz/
+BeiQd4Sqr8LZ7D0mOHL4KGau
+-----END PRIVATE KEY-----
+</key>
+<cert>
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            f5:80:a5:8d:36:98:0d:27:f8:b4:52:f0:ab:f5:a3:3e
+    Signature Algorithm: sha256WithRSAEncryption
+        Issuer: CN=ca\n
+        Validity
+            Not Before: Jun 23 16:21:27 2018 GMT
+            Not After : Jun 20 16:21:27 2028 GMT
+        Subject: CN=nynja
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:a1:07:75:1b:cc:bd:e2:cc:e3:00:b9:76:01:6d:
+                    7c:fe:28:2e:85:2a:07:9f:15:91:ef:2b:0b:a5:f7:
+                    ac:c3:a1:ba:7d:00:46:57:5e:21:31:3e:17:17:2a:
+                    af:0e:52:3d:9d:34:f5:57:e1:ed:7c:09:9c:29:7a:
+                    fb:7c:22:9f:a0:c4:ce:01:02:fa:6b:3d:6f:ff:9e:
+                    5c:ea:f3:9d:bd:cc:51:cd:eb:c8:a9:6a:1d:f4:5d:
+                    f4:20:9a:47:0b:0a:ce:f0:a9:30:ac:b9:40:b0:07:
+                    cd:25:31:f9:28:93:81:fe:ec:ee:8a:6f:1e:f9:43:
+                    5e:29:70:1c:1a:c7:5b:9b:94:bb:b7:9b:d5:3e:c2:
+                    0f:91:e7:c5:25:f5:96:5e:9b:f5:2c:95:49:49:57:
+                    3b:cf:36:c5:e7:e7:e9:33:67:28:e0:2f:32:00:bc:
+                    b3:cd:ee:a1:2a:30:73:a0:88:34:57:ad:b4:42:f3:
+                    ab:d9:27:e0:4c:cf:a2:d8:24:52:ab:d8:6d:63:78:
+                    af:54:dc:be:b4:f5:6b:29:a3:b0:5b:74:b8:96:23:
+                    dc:8e:cb:eb:0b:3c:1c:b1:24:43:a1:da:c5:81:50:
+                    b2:fb:22:e6:33:7b:48:40:c1:9e:c0:17:76:a1:a6:
+                    1a:4d:23:41:52:16:8c:4b:7a:1e:9e:60:c5:cf:ff:
+                    2d:81
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            X509v3 Subject Key Identifier: 
+                9D:10:1B:72:FD:11:A2:C4:96:BF:BD:DD:26:A0:9C:CF:3B:CB:80:E3
+            X509v3 Authority Key Identifier: 
+                keyid:F5:26:8F:A6:1E:C7:56:0F:FB:1B:C9:09:F5:8A:61:8E:B4:F8:9E:A6
+                DirName:/CN=ca\n
+                serial:99:62:81:98:C1:BC:1C:0B
+
+            X509v3 Extended Key Usage: 
+                TLS Web Client Authentication
+            X509v3 Key Usage: 
+                Digital Signature
+    Signature Algorithm: sha256WithRSAEncryption
+         b3:ea:07:71:63:75:57:fb:89:bd:67:ee:14:d1:be:db:2e:e6:
+         b0:4e:1a:00:f4:30:9c:0f:78:55:0d:08:43:1f:a5:d7:94:c9:
+         94:da:9b:3c:3f:80:52:93:6f:40:90:7a:57:cc:21:12:65:ac:
+         69:66:20:39:70:fb:24:e0:3e:1b:9d:78:6e:90:cd:6a:2f:69:
+         8c:2a:78:ae:e6:ec:5b:b5:23:0b:99:7c:48:55:2d:6f:a5:56:
+         b0:5f:05:02:ac:a7:b9:ad:3a:21:67:95:e5:0a:f1:7d:05:05:
+         33:bd:88:55:ed:90:68:f5:05:34:d8:b3:23:08:59:63:23:e6:
+         93:a1:5e:0d:ec:cf:8e:4a:f1:fe:6d:e1:a3:97:f4:98:d8:0b:
+         e8:eb:c0:dc:24:17:cb:ca:d9:5e:10:4c:58:3f:0d:94:37:8f:
+         77:db:56:77:d7:72:ac:42:db:ef:ce:d8:da:6b:3d:f4:d4:d5:
+         bd:61:ab:8e:0a:33:d4:b3:77:17:c9:2e:7d:de:fd:bd:08:1b:
+         74:80:fe:5c:51:36:07:76:9a:2c:7d:06:a7:83:26:2f:3a:82:
+         8f:aa:1c:63:14:ca:c7:12:67:60:0f:bb:6f:a1:e6:75:22:21:
+         ff:ec:02:9c:d0:b0:31:f6:de:5e:d6:b9:cb:18:03:71:7e:17:
+         a0:95:93:7c
+-----BEGIN CERTIFICATE-----
+MIIDOzCCAiOgAwIBAgIRAPWApY02mA0n+LRS8Kv1oz4wDQYJKoZIhvcNAQELBQAw
+DzENMAsGA1UEAwwEY2FcbjAeFw0xODA2MjMxNjIxMjdaFw0yODA2MjAxNjIxMjda
+MBAxDjAMBgNVBAMMBW55bmphMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKC
+AQEAoQd1G8y94szjALl2AW18/iguhSoHnxWR7ysLpfesw6G6fQBGV14hMT4XFyqv
+DlI9nTT1V+HtfAmcKXr7fCKfoMTOAQL6az1v/55c6vOdvcxRzevIqWod9F30IJpH
+CwrO8KkwrLlAsAfNJTH5KJOB/uzuim8e+UNeKXAcGsdbm5S7t5vVPsIPkefFJfWW
+Xpv1LJVJSVc7zzbF5+fpM2co4C8yALyzze6hKjBzoIg0V620QvOr2SfgTM+i2CRS
+q9htY3ivVNy+tPVrKaOwW3S4liPcjsvrCzwcsSRDodrFgVCy+yLmM3tIQMGewBd2
+oaYaTSNBUhaMS3oenmDFz/8tgQIDAQABo4GQMIGNMAkGA1UdEwQCMAAwHQYDVR0O
+BBYEFJ0QG3L9EaLElr+93SagnM87y4DjMD8GA1UdIwQ4MDaAFPUmj6Yex1YP+xvJ
+CfWKYY60+J6moROkETAPMQ0wCwYDVQQDDARjYVxuggkAmWKBmMG8HAswEwYDVR0l
+BAwwCgYIKwYBBQUHAwIwCwYDVR0PBAQDAgeAMA0GCSqGSIb3DQEBCwUAA4IBAQCz
+6gdxY3VX+4m9Z+4U0b7bLuawThoA9DCcD3hVDQhDH6XXlMmU2ps8P4BSk29AkHpX
+zCESZaxpZiA5cPsk4D4bnXhukM1qL2mMKniu5uxbtSMLmXxIVS1vpVawXwUCrKe5
+rTohZ5XlCvF9BQUzvYhV7ZBo9QU02LMjCFljI+aToV4N7M+OSvH+beGjl/SY2Avo
+68DcJBfLytleEExYPw2UN49321Z313KsQtvvztjaaz301NW9YauOCjPUs3cXyS59
+3v29CBt0gP5cUTYHdposfQangyYvOoKPqhxjFMrHEmdgD7tvoeZ1IiH/7AKc0LAx
+9t5e1rnLGANxfheglZN8
+-----END CERTIFICATE-----
+</cert>
+<ca>
+-----BEGIN CERTIFICATE-----
+MIIDHjCCAgagAwIBAgIJAJligZjBvBwLMA0GCSqGSIb3DQEBCwUAMA8xDTALBgNV
+BAMMBGNhXG4wHhcNMTgwNjIzMTYxNzM3WhcNMjgwNjIwMTYxNzM3WjAPMQ0wCwYD
+VQQDDARjYVxuMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuqqMrADt
+M7p0kXH8Wbm6ubICpM32oO2q2Ft5vrmakDWlxKnKFM0S9o6N/IqPiJyU4t0A2vHj
+VA5z6AFjwOZv1WTiOxDgZlBgufEu+FuIzRUkbqZe8if1oTyQfYZWRgT0mv4YYJo0
+EBRckiA9Q4MsuL4wgzqq8PJBpfhvJ4Zw38xslpBUTHrpDx+Ps5BArumSB4Pf8kE7
+PkuwhauG+HTIVZ8wZQXYzf1dxDyL4R4YP/FMl6bDIEHLSWUElVMlpG57WvyZkw3L
+Ec/gX277mtGKOdDo0uf7MnBn6e9eYwMlyQion3K5K9xEpTIB24tbzE0BDlOvJrfE
+B7ZKxvmtmdNqywIDAQABo30wezAdBgNVHQ4EFgQU9SaPph7HVg/7G8kJ9YphjrT4
+nqYwPwYDVR0jBDgwNoAU9SaPph7HVg/7G8kJ9YphjrT4nqahE6QRMA8xDTALBgNV
+BAMMBGNhXG6CCQCZYoGYwbwcCzAMBgNVHRMEBTADAQH/MAsGA1UdDwQEAwIBBjAN
+BgkqhkiG9w0BAQsFAAOCAQEAIvfj05QqixxEb7mnPtLWzz/jCsyxrQUaovNvPZuy
+JI9UMxoteS86HDvEgKlqMurYv+SGY1s+Rb7NcT7dKB93fmvHCNQP2kqpdHyd1ykO
+xbe/5gT4lUlzlr9N3WuxibqbjRyuDjvLcKPtxOV7nAxD8eUJERu+H63HLbUlOWYW
+btfBnFRwAnCqaZVLc37JXKeoJKFaMIP+Su44uzB7Wt5ZiPmwHvJu1lPNpQMF5/q+
+IgAJslcS6g3l2ooAu9E6gpZ0p0Qt5reEMO6fBPCcN+6qq5OQIv0RDUDSOCUfTxUF
+oLmY0RGtEjnzvmPSaZ/TEbemTtRcAYkbcWQyAapWUMezgQ==
+-----END CERTIFICATE-----
+</ca>
+<connection>
+remote vpn.ci.nynja.net 443 udp
+</connection>

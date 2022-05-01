@@ -1,0 +1,2 @@
+certIssuer: comrate-prod
+certKind: "ClusterIssuer"

@@ -1,0 +1,15 @@
+ebin/
+.idea/
+*/.gitignore
+
+# Logs
+logs
+*.log
+
+# IDEA/Webstorm project files
+.idea
+*.iml
+
+.editorconfig
+/node_modules/
+/nbproject/

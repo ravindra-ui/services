@@ -1,0 +1,248 @@
+﻿HA proxy setup steps [5000] port 
+
+
+
+
+Please first setup both haproxy & pgbouncer on both node and then check connections 
+
+
+Ex: psql -h 10.190.0.54 -p 5000 -U postgres
+
+
+# exit
+
+* NOTE: install on node 1 & 2 (standby) not witness node
+
+
+
+
+-> vi /var/lib/pgsql/12/data/pg_hba.conf
+
+
+Please make sure entery in pga_hba configuration  of postgres and permission ALL
+
+
+host    all             all         10.190.0.15/32          trust
+host    all             all         10.190.0.16/32          trust
+
+
+-> systemctl restart postgresql-12.service
+
+
+And then 
+
+
+-> yum install haproxy -y
+
+
+-> vim /etc/haproxy/haproxy.cfg
+
+
+Paste this
+
+
+global
+    log         127.0.0.1 local2
+    chroot      /var/lib/haproxy
+    pidfile     /var/run/haproxy.pid
+    maxconn     4000
+    user        haproxy
+    group       haproxy
+    daemon
+    stats socket /var/lib/haproxy/stats
+
+
+defaults
+    mode                    tcp
+    log                     global
+    retries                 3
+    timeout server 86400000
+    timeout connect 86400000
+    timeout client 86400000
+    timeout queue   1000s
+    maxconn                 3000
+
+
+listen ReadWrite
+    bind *:5000
+    mode tcp
+    timeout server 86400000
+    timeout connect 86400000
+    timeout client 86400000
+    timeout queue 1000s
+    balance leastconn
+    server pgnew-node1 10.190.0.54:6432  
+    server pgnew-node2 10.190.0.55:6432
+    
+
+
+
+
+:wq!
+
+
+
+
+->  haproxy -f /etc/haproxy/haproxy.cfg -c
+This is for checking configuration
+
+
+
+
+->systemctl restart haproxy
+->systemctl status haproxy
+
+
+
+
+->  ss -tulpn                         (optional)
+
+
+    This is for port check
+
+
+-> setsebool -P haproxy_connect_any=1
+   
+   setsebool -P haproxy_connect_any=1
+
+
+
+
+->  psql -h 10.190.0.66 -p 5000 -U postgres
+
+
+    This is for connection check on both node 
+ 
+—--------------------------------------------------------
+
+
+
+
+                                        Pgbouncer setup 
+
+
+* Please make sure entery in pga_hba configuration  of postgres and permission ALL
+
+
+vim /var/lib/pgsql/12/data/pg_hba.conf
+
+
+host    all             all         10.190.0.45/32          trust
+host    all             all         10.190.0.46/32          trust
+
+
+-> systemctl restart postgresql-12.service
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+
+NOTE : install on node 1 & 2[standby node]
+
+
+ 
+-> yum install pgbouncer -y      
+-> vim /etc/pgbouncer/pgbouncer.ini
+
+
+Paste this 
+
+
+[pgbouncer]
+listen_addr = *
+listen_port = 6432
+auth_type = trust
+auth_file = /etc/pgbouncer/userlist.txt
+
+
+admin_users = postgres
+stats_users = postgres
+
+
+pool_mode = transaction
+
+
+logfile = /var/log/pgbouncer/pgbouncer.log
+pidfile = /var/run/pgbouncer/pgbouncer.pid
+
+
+%include /etc/pgbouncer/pgbouncer.database.ini
+~
+
+
+
+
+->  create 
+->  sudo vim /etc/pgbouncer/pgbouncer.database.ini
+
+
+  NOTE -> entry in pgbouncer.database.ini “postgres = host=always node 1 in both primary & standby”
+
+
+        Paste this
+        
+[databases]
+postgres = host=pgnew-node2
+:wq!
+
+
+
+
+->  create 
+->  sudo vim /etc/pgbouncer/userlist.txt
+
+
+        Paste this
+        "postgres" "123"
+        :wq!
+
+
+->systemctl restart pgbouncer
+->systemctl status pgbouncer
+
+
+
+
+For check on both node 
+
+setsebool -P haproxy_connect_any=1
+
+
+->  psql -h 10.190.0.67 -p 6432 -U postgres
+->  psql -h 10.190.0.67 -p 5000 -U postgres
+->  psql -h 10.190.0.67 -p 5432 -U postgres
+
+
+
+
+
+
+—------------------------------------------------------------------
+
+
+If in cluster node 2(standby) is not follow the primary then follow this steps in standby nodes only 
+
+
+-> systemctl stop postgresql-12.service
+
+
+-> rm -rf /var/lib/pgsql/12/data/
+
+
+-> /usr/pgsql-12/bin/repmgr -h 10.190.0.54 -U repmgr -d repmgr -f /etc/repmgr/12/repmgr.conf standby clone
+
+
+-> systemctl start postgresql-12.service
+
+
+
+
+-> su - postgres
+
+
+-> /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf standby register -F
+
+
+-> /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf daemon start
+
+
+-> /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf cluster show

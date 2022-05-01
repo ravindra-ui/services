@@ -1,0 +1,20 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  #name: {{ template "k8s-certificate.fullname" . }}
+  name: {{ .Values.secretName }}
+spec:
+  secretName: {{ .Values.secretName }}
+  issuerRef:
+    kind: ClusterIssuer
+    name: {{ .Values.issuerName }}
+  commonName: {{ .Values.commonName }}
+  dnsNames:
+  - "{{ .Values.domainName }}"
+  acme:
+    config:
+    - dns01:
+        provider: azuredns
+      domains:
+      - "{{ .Values.domainName }}"
+      

@@ -1,0 +1,389 @@
+steps for setup postgresql
+
+* create 3 vm on gcp (centos 8)
+* create public key using putygen & insert all the vm for ssh                  // same for postgres user all process as a postgres user 
+  edit sshd_config file for send key's (public)  
+path ->  vim /etc/ssh/sshd_config
+-> PermitRootLogin yes  			'on all node'
+-> PasswordAuthentication yes  		'n all node'
+*"systemctl restart sshd " 			'on all node'
+
+---------------------------
+""w In each node, we are running the following commands.
+The first command adds the PostgreSQL Global Development Group (PGDG) repo, the second one disables RHEL’s built-in PostgreSQL module, and finally, the third one installs PostgreSQL 12 from the PGDG repo.
+
+* dnf -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+* dnf -qy module disable postgresql
+
+* dnf install postgresql12-server postgresql12-contrib
+
+
+------------------------------------
+""ince PG-Node2 are standby node we are leaving them and running initdb in the primary (PG-Node1) and witness (PG-Node-Witness) node only:
+* /usr/pgsql-12/bin/postgresql-12-setup initdb
+
+""We then make the following change in the witness node’s postgresql.conf file:
+path-> vim /var/lib/pgsql/12/data/postgresql.cong
+listen_addresses = '*'
+:wq!
+
+-------------------------
+""We also add the following lines at the end of the postgresql.conf file in the primary node:
+listen_addresses = '*' 
+max_wal_senders = 10
+max_replication_slots = 10
+wal_level = 'replica'
+hot_standby = on
+archive_mode = on
+archive_command = '/bin/true'
+
+
+-----------------------------------
+""With the changes made, we start PostgreSQL 12 service in both the primary and the witness node and enable the services.
+systemctl start postgresql-12.service
+systemctl enable postgresql-12.service
+
+-----------------------------
+""Next, we install the repmgr repo definition in the primary node (PG-Node1) and the standby node (PG-Node2)
+* yum install wget -y   'on all node'
+* wget https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+* yum install repmgr12 -y
+
+
+--------------------------
+""repmgr uses its own database to store its metadata. It is also recommended to use a special PostgreSQL user account for this application. The username and the database name can be anything, but for simplicity, we will call them both “repmgr”. Also, the user will be created as a PostgreSQL superuser.
+We are running the following commands in the primary node only. Note that we have switched to the postgres user from the shell prompt before running these commands.
+
+The first command creates the repmgr user:
+* [postgres@pg-node-3 ~]$ createuser --superuser repmgr
+
+* [postgres@pg-node-3 ~]$ createdb --owner=repmgr repmgr
+
+* [postgres@pg-node-3 ~]$ psql -c "ALTER USER repmgr SET search_path TO repmgr, public;"
+
+""With the database and the user created, we add the following line in the primary node’s postgresql.conf file:
+path-> vim /var/lib/pgsql/12/data/postgresql.cong
+
+* shared_preload_libraries = 'repmgr'
+
+ """"""This will load the repmgr extension when PostgreSQL starts. By default any PostgreSQL configuration files present in the data directory will be copied when cloning a standby, so any settings configured for the primary will be copied to the standby as well."""""
+
+
+--------------------
+"" For PostgreSQL 12, the default location of the repmgr configuration file is /etc/repmgr/12/ and it is called repmgr.conf. We are configuring repmgr in the primary and the standby node
+* For primary node (PG-Node1):
+path-> vim /etc/repmgr/12/repmgr.conf
+NOTE -> only uncomment and give info
+
+node_id=1
+node_name='PG-Node1'
+conninfo='host=internl.ip.of.primary user=repmgr dbname=repmgr connect_timeout=2
+data_directory='/var/lib/pgsql/12/data'
+
+*For standby node(PG-Node2):
+path-> vim /etc/repmgr/12/repmgr.conf
+
+NOTE -> only uncomment and give info
+node_id=2
+node_name='PG-Node2'
+conninfo='host=internl.ip.of.node-2 user=repmgr dbname=repmgr connect_timeout=2
+data_directory='/var/lib/pgsql/12/data'
+
+These are the bare minimum parameters to configure for setting up replication with repmgr.
+
+-------------------------------
+"" Next, we add the following lines in the pg_hba.conf file in PG-Node1. As we will see later, the pg_hba.conf file from the primary node will be copied to the two standbys when repmgr sets up replication. Note how we are using the CIDR range of the cluster instead of specifying individual IP addresses.
+
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+# "local" is for Unix domain socket connections only
+local   all             all                                     trust
+# IPv4 local connections:
+host    replication     repmgr          10.190.0.4/32           trust
+host    replication     repmgr          10.190.0.5/32           trust
+host    replication     repmgr          10.190.0.6/32           trust
+# IPv6 local connections:
+host    all             all             ::1/128                 ident
+# Allow replication connections from localhost, by a user with the
+# replication privilege.
+local   replication     all                                     trust
+host    replication     all             127.0.0.1/32            trust
+host    replication     all             ::1/128                 trust
+host    all             all             10.190.0.4/32           trust
+host    all             all             10.190.0.5/32           trust
+host    all             all             10.190.0.6/32           trust
+
+
+Note -> type internal ip of all node in address coulmn
+
+------------------------------------
+""Once the configs are completed, we restart the PostgreSQL service in the primary node:
+
+* systemctl restart postgresql-12.service
+
+---------------------------------------
+"" To test if the standby node can connect to the primary node, we are running the following command from PG-Node2:
+
+psql 'host=10.190.0.4 user=repmgr dbname=repmgr connect_timeout=2'
+
+-------------------------------------------
+""In our test case, the connectivity is working as we see the primary node’s PostgreSQL prompt.at the repmgr database:
+
+# repmgr>
+
+----------------------------------------
+""We then run the following command in the primary node (PG-Node1) as the postgres user. This registers the primary node PostgreSQL instance with repmgr. This command installs the repmgr extension. It also adds metadata about the primary node in the repmgr database.
+
+* [postgres@pg-node-1 ~]$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf primary register
+
+The output looks like this:
+INFO: connecting to primary database...
+NOTICE: attempting to install extension "repmgr"
+NOTICE: "repmgr" extension successfully installed
+NOTICE: primary node record (ID: 1) registered
+
+----------------------
+"" We can now quickly check the status of our cluster:
+
+* [postgres@PG-NodeX ~]$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf cluster show
+
+As expected, our cluster has only one node – the primary:
+
+[postgres@pg-node-1 ~]$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf cluster show
+ ID | Name      | Role    | Status    | Upstream | Location | Priority | Timeline | Connection string
+----+-----------+---------+-----------+----------+----------+----------+----------+-------------------------------------------------------------
+ 1  | pg-node-1 | primary | * running |          | default  | 100      | 1        | host=10.190.0.4 user=repmgr dbname=repmgr connect_timeout=2
+----------------------------------------------
+
+""Next, we will run the following command in the standby nodes (PG-Node2) as the postgres user for a dry-run before actually cloning from the primary:
+
+* [postgres@pg-node-2 ~]$ /usr/pgsql-12/bin/repmgr -h 10.190.0.15 -U repmgr -d repmgr -f /etc/repmgr/12/repmgr.conf standby clone --dry-run
+#first stop instance2
+
+If the output is like the following, it tells us the cloning will succeed:
+
+NOTICE: destination directory "/var/lib/pgsql/12/data" provided
+INFO: connecting to source node
+DETAIL: connection string is: host=10.190.0.4 user=repmgr dbname=repmgr
+DETAIL: current installation size is 31 MB
+INFO: "repmgr" extension is installed in database "repmgr"
+INFO: replication slot usage not requested;  no replication slot will be set up for this standby
+INFO: parameter "max_wal_senders" set to 10
+NOTICE: checking for available walsenders on the source node (2 required)
+INFO: sufficient walsenders available on the source node
+DETAIL: 2 required, 10 available
+NOTICE: checking replication connections can be made to the source server (2 required)
+INFO: required number of replication connections could be made to the source server
+DETAIL: 2 replication connections required
+WARNING: data checksums are not enabled and "wal_log_hints" is "off"
+DETAIL: pg_rewind requires "wal_log_hints" to be enabled
+NOTICE: standby will attach to upstream node 1
+HINT: consider using the -c/--fast-checkpoint option
+INFO: would execute:
+  /usr/pgsql-12/bin/pg_basebackup -l "repmgr base backup"  -D /var/lib/pgsql/12/data -h 10.190.0.4 -p 5432 -U repmgr -X stream
+INFO: all prerequisites for "standby clone" are met
+
+
+
+------
+If there are errors reported, we need to go back to the logs to check further. If both the standby nodes show all prerequisites for standby clone are met, we can go ahead with the clone operation:
+
+[postgres@pg-node-2 ~]$ /usr/pgsql-12/bin/repmgr -h 10.190.0.4 -U repmgr -d repmgr -f /etc/repmgr/12/repmgr.conf standby clone
+                  # /usr/pgsql-12/bin/repmgr -h 10.190.0.15 -U repmgr -d repmgr -f /etc/repmgr/12/repmgr.conf -F standby clone
+
+A successful clone operation shows a series of messages like this:
+
+NOTICE: destination directory "/var/lib/pgsql/12/data" provided
+INFO: connecting to source node
+DETAIL: connection string is: host=10.190.0.4 user=repmgr dbname=repmgr
+DETAIL: current installation size is 31 MB
+INFO: "repmgr" extension is installed in database "repmgr"
+INFO: replication slot usage not requested;  no replication slot will be set up for this standby
+INFO: parameter "max_wal_senders" set to 10
+NOTICE: checking for available walsenders on the source node (2 required)
+INFO: sufficient walsenders available on the source node
+DETAIL: 2 required, 10 available
+NOTICE: checking replication connections can be made to the source server (2 required)
+INFO: required number of replication connections could be made to the source server
+DETAIL: 2 replication connections required
+WARNING: data checksums are not enabled and "wal_log_hints" is "off"
+DETAIL: pg_rewind requires "wal_log_hints" to be enabled
+NOTICE: standby will attach to upstream node 1
+HINT: consider using the -c/--fast-checkpoint option
+INFO: would execute:
+  /usr/pgsql-12/bin/pg_basebackup -l "repmgr base backup"  -D /var/lib/pgsql/12/data -h 10.190.0.4 -p 5432 -U repmgr -X stream
+INFO: all prerequisites for "standby clone" are met
+
+
+---------------------------
+"" At this stage, PostgreSQL isn’t running in the standby node although the node have their Postgres data directory copied from the primary (including any PostgreSQL configuration files present in the primary’s data directory). We start the postgresql service in the node and enable the service
+
+* systemctl start postgresql-12.service
+* systemctl enable postgresql-12.service
+
+
+--------------------------------
+
+""We then run the following command in standby node as the postgres user to register it with repmgr: 
+
+/usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf standby register >>>>> run on node-2
+
+
+Also, we run the following repmgr command from any of the nodes as the postgres user:
+* /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf cluster show --compact
+
+-----------------------------------------
+
+"""We will now configure the cluster and the witness node for automatic failover.
+
+Step 1: Install and Configure repmgr in Witness
+
+* wget https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+
+And then:
+
+* yum install repmgr12 -y
+
+------------------------------------
+step 2: Next, we add the following lines in the witness node’s postgresql.conf file:
+
+listen_addresses = '*'
+shared_preload_libraries = 'repmgr'
+
+---------------
+step 3: We also add the following lines in the pg_hba.conf file in the witness node. Note how we are using the CIDR range of the cluster instead of specifying individual IP addresses.
+
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+# "local" is for Unix domain socket connections only
+local   all             all                                     trust
+# IPv4 local connections:
+host    replication     repmgr          10.190.0.4/32           trust
+host    replication     repmgr          10.190.0.5/32           trust
+host    replication     repmgr          10.190.0.6/32           trust
+# IPv6 local connections:
+host    all             all             ::1/128                 ident
+# Allow replication connections from localhost, by a user with the
+# replication privilege.
+local   replication     all                                     trust
+host    replication     all             127.0.0.1/32            trust
+host    replication     all             ::1/128                 trust
+host    all             all             10.190.0.4/32           trust
+host    all             all             10.190.0.5/32           trust
+host    all             all             10.190.0.6/32           trust
+
+
+-------------------
+step 4:With postgresql.conf and pg_hba.conf changes done, we create the repmgr user and the repmgr database in the witness, and change the repmgr user’s default search path:
+
+* createuser --superuser repmgr
+
+* createdb --owner=repmgr repmgr
+
+* psql -c "ALTER USER repmgr SET search_path TO repmgr, public;"
+
+------------------
+step 5: Finally, we add the following lines to the repmgr.conf file, located under /etc/repmgr/12/
+
+node_id=3
+node_name='PG-Node-Witness'
+conninfo='host=16.0.1.37 user=repmgr dbname=repmgr connect_timeout=2'
+data_directory='/var/lib/pgsql/12/data'
+
+---------------------
+step 6: Once the config parameters are set, we restart the PostgreSQL service in the witness node:
+
+* systemctl restart postgresql-12.service
+
+-----------------------
+step 7: To test the connectivity to witness node repmgr, we can run this command from the primary node:
+
+[postgres@pg-node-1 ~]$ psql 'host=10.190.0.6 user=repmgr dbname=repmgr connect_timeout=2'
+psql (12.10)
+Type "help" for help.
+
+repmgr=#
+
+--------------------------
+step 8: Next, we register the witness node with repmgr by running the “repmgr witness register” command as the postgres user. Note how we are using the address of the primary node, and NOT the witness node in the command below:
+
+[postgres@pg-node-3 ~]$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf witness register -h 10.190.0.4
+
+This is because the “repmgr witness register” command adds the witness node’s metadata to primary node’s repmgr database, and if necessary, initialises the witness node by installing the repmgr extension and copying the repmgr metadata to the witness node.
+
+The output will look like this:
+INFO: connecting to witness node "pg-node-3" (ID: 3)
+INFO: connecting to primary node
+NOTICE: attempting to install extension "repmgr"
+NOTICE: "repmgr" extension successfully installed
+INFO: witness registration complete
+NOTICE: witness node "pg-node-3" (ID: 3) successfully registered
+
+--------------------------------
+step 9: Finally, we check the status of the overall setup from any node:
+
+[postgres@pg-node-3 ~]$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf cluster show --compact
+ ID | Name      | Role    | Status    | Upstream  | Location | Prio. | TLI
+----+-----------+---------+-----------+-----------+----------+-------+-----
+ 1  | pg-node-1 | primary | * running |           | default  | 100   | 1
+ 2  | pg-node-2 | standby |   running | pg-node-1 | default  | 100   | 1
+ 3  | pg-node-3 | witness | * running | pg-node-1 | default  | 0     | n/a
+ 
+ 
+ 
+ ================================================
+ 
+ wal_level = replica
+max_wal_senders = 10
+max_replication_slots = 10
+archive_mode = on
+archive_command = '/bin/true'
+shared_preload_libraries = 'pg_stat_statements, repmgr'
+wal_log_hints = 'on'
+wal_keep_segments = 32
+hot_standby = on
+wal_sender_timeout = 300s
+wal_receiver_timeout = 300s
+listen_address = '*
+----------------------------------------------------------------
+
+ssh-copy-id -i id_rsa.pub root@pg-dba2
+
+
+---------------------
+Node1>>>(Add Repmanager)
+--------
+1. add repo 
+# curl https://dl.2ndquadrant.com/default/release/get/12/rpm | sudo bash
+# curl https://dl.2ndquadrant.com/default/release/get/12/rpm | less
+            
+
+2. yum install repmgr12.x86_64
+
+
+-----------------------------
+Install postgres >>>>
+-----------------------
+
+sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+sudo dnf -qy module disable postgresql
+sudo dnf install -y postgresql12-server
+sudo /usr/pgsql-12/bin/postgresql-12-setup initdb
+sudo systemctl enable postgresql-12
+sudo systemctl start postgresql-12
+-----------------------------
+https://www.2ndquadrant.com/en/blog/how-to-automate-postgresql-12-replication-and-failover-with-repmgr-part-2/
+============================================================================================================
+
+Add visudo all the 3 nodes>>>
+----------------------->>>>
+1. Defaults:postgres !requiretty
+postgres ALL = NOPASSWD: /usr/bin/systemctl stop postgresql-12.service, /usr/bin/systemctl start postgresql-12.service, /usr/bin/systemctl restart postgresql-12.service, /usr/bin/systemctl reload postgresql-12.service, /usr/bin/systemctl start repmgr12.service, /usr/bin/systemctl stop repmgr12.service
+
+Step 3: Configuring repmgrd Parameters>>
+
+# cat /var/log/messages | grep repmgr | less
+
+#diff /tmp/repmg /etc/repmgr/12/repmgr.conf

@@ -1,0 +1,15 @@
+https://codeburst.io/kubernetes-ckad-weekly-challenges-overview-and-tips-7282b36a2681
+https://killer.sh/cka
+https://blog.shanelee.name/2018/10/17/how-i-aced-the-certified-kubernetes-administrator-cka-exam/
+http://devnetstack.com/certified-kubernetes-administrator-exam-study-guide/
+https://vocon-it.com/2019/07/19/certified-kubernetes-administrator-labs-1-the-challenge/
+http://kubernetesbyexample.com/pods/
+https://www.manning.com/books/kubernetes-in-action
+https://kubedex.com/7-5-tips-to-help-you-ace-the-certified-kubernetes-administrator-cka-exam/
+
+
+https://www.contino.io/insights/the-ultimate-guide-to-passing-the-cka-exam
+
+
+https://vmtechie.blog/2019/01/12/how-to-prepare-for-certified-kubernetes-administration-cka-exam/
+https://github.com/walidshaari/Kuberne…

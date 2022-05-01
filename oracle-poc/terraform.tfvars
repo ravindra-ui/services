@@ -1,0 +1,12 @@
+instance_name   = "oracle-sandbox-ravi1"
+machine_type    = "e2-medium"
+region          = "asia-south1"
+project         = "tecore-sandbox"
+disk_image      = "centos-7-v20211105"
+disk_size       = 20
+disk_type       = "pd-standard"
+network         = "default"
+credential      = "./credentials/ravi-sandbox.json"
+startup_script  = "./scripts/start.sh"
+ssh_key         = "/root/.ssh/id_rsa.pub"
+service_account = "tf-ravi2121@tecore-sandbox.iam.gserviceaccount.com"

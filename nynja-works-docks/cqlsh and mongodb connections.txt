@@ -1,0 +1,26 @@
+=================connect to cassandra cqlsh====================
+
+1. connect to cluster :- ./test-tecore.sh
+2. connect to cqlsh   :- kubectl exec cassandra-0 -n cassandra -ti -- cqlsh
+3. connect to comrate database  :- use comrate;
+4. describe table     :- Describe tables; 
+5. for show data in the tables     : select * from <table-name>;
+
+
+================ connect to mongodb shell =============================
+
+
+1. connect to cluster :- ./test-tecore.sh
+2. get service pod    :- kubectl get pod -n mongodb
+3. connect to shell   :- kubectl exec pod/mongodb-58d9898cd8-pv9st -n mongodb -ti -- bin/bash
+ Output :- I have no name!@mongodb-58d9898cd8-pv9st:/$  
+4. connect to comrate database  :-  mongo -u "cruser" --authenticationDatabase "comrate" -p
+5. Enter password:- 9*7df34jgd04f
+6. for switching database :- > use database_name    //6. for comrate password :- use comrate;
+7. Get the Database table :- > show collections
+8. To see records in a table :- > db.table_name.find().pretty();
+9. To see a perticular table detail :- > db.table_name({ID}).pretty();
+===================================================================
+
+
+

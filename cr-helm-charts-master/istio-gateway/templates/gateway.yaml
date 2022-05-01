@@ -1,0 +1,57 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: {{ template "istio-gateway.fullname" . }}
+  labels:
+    app: {{ template "istio-gateway.name" . }}
+    chart: {{ template "istio-gateway.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- with .Values.gateway.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+spec:
+  selector:
+{{ toYaml .Values.gateway.selector | indent 4 }}
+  servers:
+{{- if .Values.protocol.http.enabled }}
+  - hosts:
+    {{- range .Values.gateway.hosts }}
+      - '{{ . }}'
+    {{- end }}
+    port:
+      name: http
+      number: {{ .Values.protocol.http.port }}
+      protocol: HTTP
+    tls:
+      httpsRedirect: true
+{{- end }}
+{{- if .Values.protocol.https.enabled }}
+  - hosts:
+    {{- range .Values.gateway.hosts }}
+      - '{{ . }}'
+    {{- end }}
+    port:
+      name: https
+      number: {{ .Values.protocol.https.port }}
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      privateKey: /etc/istio/ingressgateway-certs/tls.key
+      serverCertificate: /etc/istio/ingressgateway-certs/tls.crt
+{{- end }}
+{{- if .Values.protocol.tls.enabled }}
+  - hosts:
+    {{- range .Values.gateway.hosts }}
+      - '{{ . }}'
+    {{- end }}
+    port:
+      name: tls
+      number: {{ .Values.protocol.tls.port }}
+      protocol: TLS
+    tls:
+      mode: SIMPLE
+      privateKey: /etc/istio/ingressgateway-certs/tls.key
+      serverCertificate: /etc/istio/ingressgateway-certs/tls.crt
+{{- end }}

@@ -1,0 +1,67 @@
+replicaCount: 1
+
+image:
+  repository: eu.gcr.io/nynja-ci-201610/wallet-service-nodejs/wallet-service-nodejs
+  tag: 
+  pullPolicy: 
+
+gateway:
+  selector:
+  - api-gateway.default.svc.cluster.local
+  hosts:
+  - wallet-service-nodejs.dev.nynja.net
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 700Mi
+  requests:
+    cpu: 20m
+    memory: 500Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# SERVER PROPERTIES
+service:
+  type: "ClusterIP"
+  port: 3000
+
+webServer:
+  protocol: "http"
+  host: "wallet-service-nodejs.wallet-service-nodejs.svc.cluster.local"
+  port: 3000
+
+
+readinessProbe: {}
+#  exec:
+#    command:
+#      - /bin/sh
+#      - -c
+#      - curl --silent http://localhost:3000/actuator/health | grep UP
+#  successThreshold: 1
+#  failureThreshold: 10
+#  initialDelaySeconds: 120
+#  periodSeconds: 10
+#  timeoutSeconds: 10
+  
+livenessProbe: {}
+#  httpGet:
+#    path: /actuator/info
+#    port: 3000
+#  successThreshold: 1
+#  failureThreshold: 10
+#  initialDelaySeconds: 120
+#  periodSeconds: 10
+#  timeoutSeconds: 10
+
+corsPolicy:
+  allowOrigin:
+  allowMethods:
+  allowCredentials:
+  allowHeaders:
+  exposeHeaders:
+  maxAge:

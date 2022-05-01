@@ -1,0 +1,104 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: wallet-service-nodejs
+  namespace: wallet-service-nodejs
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: wallet-service-nodejs
+      version: 0.2.1
+      sourceRef:
+        kind: HelmRepository
+        name: nynja
+        namespace: flux-system
+      interval: 1m
+  values:
+    replicaCount: 1
+    image:
+      repository: ${IMAGE_NAME}
+      tag: ${IMAGE_BUILD_TAG}
+      pullPolicy: IfNotPresent
+    corsPolicy:
+      allowOrigin:
+      - http://localhost:3000
+      - http://localhost:8080
+      - https://localhost
+      - http://localhost
+      - http://127.0.0.1
+      - https://localhost/grpc/
+      - http://10.191.224.180:3000
+      - https://localhost:8080
+      - https://127.0.0.1:8080
+      - https://web.dev.nynja.net
+      - https://web.staging.nynja.net
+      - https://web.nynja.net
+      - https://desktop.dev.nynja.net
+      - https://desktop.staging.nynja.net
+      - https://desktop.nynja.net
+      allowMethods:
+      - POST
+      - GET
+      - OPTIONS
+      - PUT
+      - HEAD
+      allowCredentials: false
+      allowHeaders:
+      - content-type
+      - x-grpc-web
+      - authorization
+      - pragma
+      - Authorization
+      - Origin
+      - X-Requested-With
+      - Content-Type
+      - Accept
+      maxAge: "600s"
+    gateway:
+      selector:
+      - api-gateway.default.svc.cluster.local
+      hosts:
+      - wallet-service-nodejs.staging.nynja.net
+    resources:
+      limits:
+        cpu: 200m
+        memory: 700Mi
+      requests:
+        cpu: 50m
+        memory: 500Mi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    # SERVER PROPERTIES
+    service:
+      type: "ClusterIP"
+      port: 3000
+      #grpc: 6565
+    # WEBSERVER PROPERTIES
+    webServer:
+      protocol: "http"
+      host: "wallet-service-nodejs.wallet-service-nodejs.svc.cluster.local"
+      port: 3000
+   # readinessProbe
+    readinessProbe: {}
+    #  exec:
+    #    command:
+    #      - /bin/sh
+    #      - -c
+    #      - curl --silent http://localhost:8080/broadcast/actuator/health | grep UP
+    #  successThreshold: 1
+    #  failureThreshold: 10
+    #  initialDelaySeconds: 120
+    #  periodSeconds: 10
+    #  timeoutSeconds: 10
+    # livenessProbe
+    livenessProbe: {}
+    #  httpGet:
+    #    path: /broadcast/actuator/info
+    #    port: 8080
+    #  successThreshold: 1
+    #  failureThreshold: 10
+    #  initialDelaySeconds: 120
+    #  periodSeconds: 10
+    #  timeoutSeconds: 10

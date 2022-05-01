@@ -1,0 +1,10 @@
+Hi Team, We have found that there is some issue in Bridge Service. In logs are showing error, We will get back to you as soon as service is running fine.
+
+
+helo sir, In bridge service showing some issue in logs and i am going to this post in nynja devops channel and nynja group 24*7. 
+
+Hi Team, We have found that there is some issue in Bridge Service. In logs are showing error, We will get back to you as soon as service is running fine.
+
+ Hi Team, This is indication the bridge could not communicate with Erlang at this time.This should be UTC time,so this has happened this morning, about 12 hours ago. And now this time Bridge service working properly.
+
+

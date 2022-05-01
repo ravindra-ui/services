@@ -1,0 +1,15 @@
+# Default values for k8s-certificate.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+issuerName: "comrate-prod"
+
+# The name of secret used to store the TLS certificate
+# If not specified, default to full name
+# secretName: istio-ingressgateway-certs
+secretName: "istio-ingressgateway-certs"
+
+# The common name of the certificate to be issued
+commonName: ""
+
+domainName: "*.examprime.com"

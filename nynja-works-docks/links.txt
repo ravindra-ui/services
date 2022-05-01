@@ -1,0 +1,16 @@
+grafana (vpn): https://metrics.nynja.net , https://metrics.dev.nynja.net , https://metrics.staging.nynja.net
+prometheus (vpn): https://prometheus.nynja.net , https://prometheus.dev.nynja.net , https://prometheus.staging.nynja.net
+prometheus alert manager (vpn): https://alertmanager.nynja.net/ , https://alertmanager.dev.nynja.net/ , https://alertmanager.staging.nynja.net/
+pagerduty:https://nynja.pagerduty.com/incidents
+logz.io (login with google account - prakash@tecorelabs.com)
+Slack: nynjagroup.slack.com
+Jfrog: https://nynjagroup.jfrog.io/nynjagroup/webapp/#/login
+GCP: https://console.cloud.google.com
+Confluence: https://nynjadev.atlassian.net/wiki/discover/all-updates
+Jira: https://nynjadev.atlassian.net/browse/NY-1317?filter=-6
+
+
+
+
+FOR TROUBLESHOOTING
+https://managedkube.com/kubernetes/pod/failure/crashloopbackoff/k8sbot/troubleshooting/2019/02/12/pod-failure-crashloopbackoff.html

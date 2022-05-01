@@ -1,0 +1,22 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: {{ .Values.certKind }}
+metadata:
+  name: {{ .Values.certIssuer }}
+spec:
+  acme:
+    # The ACME production server URL
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # Email address used for ACME registration
+    email: akash.rajvanshi@tecorelabs.com
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: {{ .Values.certIssuer }}
+    # Enable the HTTP-01 challenge provider
+    #http01: {}
+    solvers:
+    - dns01:
+        clouddns:
+          serviceAccountSecretRef:
+            name: clouddns
+            key: clouddns.key.json
+          project: comrate-307109

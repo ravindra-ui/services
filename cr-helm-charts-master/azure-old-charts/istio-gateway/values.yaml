@@ -1,0 +1,24 @@
+
+nameOverride: "api-gateway"
+
+gateway:
+
+  selector:
+    istio: ingressgateway
+
+  annotations: {}
+  hosts:
+    - '*'
+    
+protocol:
+  http:
+    enabled: true
+    port: 80
+  https:
+    enabled: true
+    port: 443
+  tls:
+    enabled: false
+    port: 8443
+
+#credentialName: istio-ingressgateway-certs

@@ -1,0 +1,123 @@
+#!/usr/bin/env groovy
+
+@Library('nynja-common') _
+
+pipeline {
+  environment {
+    SLACK_CHANNEL = "#nynja-devops-feed"
+    NAMESPACE = "wallet-service-nodejs"
+    APP_NAME = "wallet-service-nodejs"
+    IMAGE_NAME = "eu.gcr.io/nynja-ci-201610/${NAMESPACE}/${APP_NAME}"
+    IMAGE_BUILD_TAG = "$BRANCH_NAME-$BUILD_NUMBER"
+    HELM_CHART_NAME = "wallet-service-nodejs"
+    DEV_BRANCH = "dev"
+  }
+  agent {
+    kubernetes(builders.multi([
+      "nodejs":"node:16.14.2",
+      "helm":"lachlanevenson/k8s-helm:v2.9.1"
+    ]))
+  }
+  options {
+    skipDefaultCheckout()
+    buildDiscarder(logRotator(numToKeepStr: '15'))
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        container('nodejs') {
+          script {
+            def vars = checkout scm
+            vars.each { k,v -> env.setProperty(k, v) }
+          }
+          slackSend channel: SLACK_CHANNEL, message: slackStartMsg()
+          slackSend channel: SLACK_CHANNEL, message: "", attachments: slackBuildInfo()
+        }
+      }
+    }
+    stage('Build Dev') {
+      when {
+        branch env.DEV_BRANCH
+      }
+      stages {
+        stage('Build') {
+          steps {
+            container('nodejs') {
+              dockerBuildAndPushToRegistry "${NAMESPACE}/${APP_NAME}", [IMAGE_BUILD_TAG]
+            }
+          }
+        }
+        stage("Helm chart") {
+          steps {
+            container('helm') {
+              helmBuildAndPushToRegistry HELM_CHART_NAME
+            }
+          }
+        }
+        stage('Deploy preview') {
+          steps {
+            deployHelmToNew "dev1", NAMESPACE
+          }
+        }
+      }
+      post {
+        success {
+          container('nodejs') { slackSend channel: SLACK_CHANNEL, message: slackEndMsg(), color: 'good' }
+        }
+        failure {
+          container('nodejs') { slackSend channel: SLACK_CHANNEL, message: slackEndMsg(), color: 'danger' }
+        }
+      }
+    }
+    stage('Build Release') {
+      when {
+        branch 'main'
+      }
+      stages {
+        stage("Build") {
+          steps {
+            container('nodejs') {
+              dockerBuildAndPushToRegistry "${NAMESPACE}/${APP_NAME}", [IMAGE_BUILD_TAG]
+            }
+          }
+        }
+        stage("Helm chart") {
+          steps {
+            container('helm') {
+              helmBuildAndPushToRegistry HELM_CHART_NAME
+            }
+          }
+        }
+        stage("Approval: Deploy to staging ?") {
+          steps {
+            slackSend channel: SLACK_CHANNEL, message: "$APP_NAME: build #$BUILD_NUMBER ready to deploy to `STAGING`, approval required: $BUILD_URL (24h)"
+
+            timeout(time: 24, unit: 'HOURS') { input 'Deploy to staging ?' }
+          }
+          post { failure { echo 'Deploy aborted for build #...' }}
+        }
+        stage("Deploy to staging") {
+            steps {
+              slackSend channel: SLACK_CHANNEL, message: "$APP_NAME: deploying build #$BUILD_NUMBER to `STAGING`"
+              deployHelmToNew "staging1", NAMESPACE
+            }
+        }
+        stage("Approval: Deploy to production ?") {
+          steps {
+            slackSend channel: SLACK_CHANNEL, message: "$APP_NAME: build #$BUILD_NUMBER ready to deploy to `PRODUCTION`, approval required: $BUILD_URL (24h)"
+
+            timeout(time: 7, unit: 'DAYS') { input 'Deploy to production ?' }
+          }
+          post { failure { echo 'Deploy aborted for build #...' }}
+        }
+        stage("Deploy to production") {
+          steps {
+            slackSend channel: SLACK_CHANNEL, message: "$APP_NAME: deploying build #$BUILD_NUMBER to `PRODUCTION`"
+
+            deployHelmToNew "prod1", NAMESPACE
+          }
+        }
+      }
+    }
+  }
+}

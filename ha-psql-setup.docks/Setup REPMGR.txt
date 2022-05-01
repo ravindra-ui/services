@@ -1,0 +1,237 @@
+node2 (10.190.0.22)
+node1 (10.190.0.24)
+node3 (10.190.0.23)
+
+below steps for all three nodes :
+---------------------
+
+$ sudo -iu root
+[root@pg-1 ~]#dnf -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+[root@pg-1 ~]#dnf -qy module disable postgresql
+[root@pg-1 ~]#dnf install postgresql12-server postgresql12-contrib
+[root@pg-1 ~]#/usr/pgsql-12/bin/postgresql-12-setup initdb
+[root@pg-1 ~]#sudo systemctl enable --now postgresql-12
+[root@pg-1 ~]#systemctl status postgresql-12
+[root@pg-1 ~]#sudo firewall-cmd --add-service=postgresql --permanent
+[root@pg-1 ~]#sudo firewall-cmd --reload
+
+sudo su - postgres 
+$ psql -c "alter user postgres with password 'postgres'" 
+$ psql -c "ALTER SYSTEM SET listen_addresses TO '*';"
+
+$ vi /var/lib/pgsql/12/data/pg_hba.conf	
+
+#remove All from /var/lib/pgsql/12/data/pg_hba.conf and keep below entry in /var/lib/pgsql/12/data/pg_hba.conf
+
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+# "local" is for Unix domain socket connections only
+local   all             all                                     trust
+# IPv4 local connections:
+host    replication     repmgr          10.190.0.66/32           trust
+host    replication     repmgr          10.190.0.67/32           trust
+host    replication     repmgr          10.190.0.68/32           trust
+# IPv6 local connections:
+host    all             all             ::1/128                 ident
+# Allow replication connections from localhost, by a user with the
+# replication privilege.
+local   replication     all                                     trust
+host    replication     all             127.0.0.1/32            trust
+host    replication     all             ::1/128                 trust
+host    all             all             10.190.0.66/32           trust
+host    all             all             10.190.0.67/32           trust
+host    all             all             10.190.0.68/32           trust
+:wq!
+
+
+$ sudo -iu root
+
+[root@pg-1 ~]# sudo systemctl restart postgresql-12
+[root@pg-1 ~]# sudo systemctl status postgresql-12
+
+[root@pg-1 ~]#sudo su - postgres 
+
+sudo su - postgres 
+$ psql -U postgres -h 10.190.0.22 -p 5432
+
+[root@pg-1 ~]#sudo -iu root
+[root@pg-1 ~]#yum install wget -y 
+[root@pg-1 ~]#curl https://dl.2ndquadrant.com/default/release/get/12/rpm | sudo bash
+[root@pg-1 ~]#yum install repmgr12.x86_64
+
+[root@pg-1 ~]#su postgres
+
+$ createuser --superuser repmgr
+$ createdb --owner=repmgr repmgr
+$ psql -c "ALTER USER repmgr SET search_path TO repmgr, public;"
+$ mkdir -p /var/lib/pgsql/rep_log/
+
+========  Append below Lines also pick connect parameters at end of flie on all nodes.
+$ /var/lib/pgsql/12/data/postgresql.conf
+
+listen_addresses = '*' 
+wal_level = replica
+synchronous_commit = on
+max_wal_senders = 10
+synchronous_standby_names = '*'
+archive_mode  = 'on'
+archive_command  = '/bin/true'
+#max_replication_slots  = 'repmgr'
+#shared_preload_libraries = 'repmgr'
+#wal_log_hints = 'on'
+#wal_keep_segments = 32
+#hot_standby = on
+#wal_sender_timeout = 300s
+#wal_receiver_timeout = 300s
+
+
+====================================================================================================================
+======================================================common========================================================
+
+
+
+Append on node1
+$ vi  /etc/repmgr/12/repmgr.conf 
+
+node_id=1
+node_name='pg-1'
+conninfo='host=10.190.0.29 user=repmgr dbname=repmgr' 
+connect_timeout=2
+data_directory='/var/lib/pgsql/12/data'
+log_file='/var/lib/pgsql/rep_log/repmgr.log' 
+log_level='INFO' 
+
+:wq!
+
+
+Append on node2
+$ vi  /etc/repmgr/12/repmgr.conf 
+
+node_id=2
+node_name='pg-2'
+conninfo='host=10.190.0.30 user=repmgr dbname=repmgr' 
+connect_timeout=2
+data_directory='/var/lib/pgsql/12/data'
+log_file='/var/lib/pgsql/rep_log/repmgr.log' 
+log_level='INFO' 
+
+:wq!
+
+
+Append on node3
+$ vi  /etc/repmgr/12/repmgr.conf 
+
+node_id=3
+node_name='pg-3'
+conninfo='host=10.190.0.23 user=repmgr dbname=repmgr' 
+connect_timeout=2
+data_directory='/var/lib/pgsql/12/data'
+log_file='/var/lib/pgsql/rep_log/repmgr.log' 
+log_level='INFO' 
+
+:wq!
+
+
+On all three nodes :
+---------------------
+[root@pg-1 ~]# su postgres
+$ cd /usr/pgsql-12/bin
+$./pg_ctl stop -D /var/lib/pgsql/12/data
+$exit
+# systemctl restart postgresql-12.service
+
+$ psql 'host=10.190.0.23 user=repmgr dbname=repmgr connect_timeout=2'
+$ psql 'host=10.190.0.24 user=repmgr dbname=repmgr connect_timeout=2'
+$ psql 'host=10.190.0.22 user=repmgr dbname=repmgr connect_timeout=2'
+
+On Primary Node:
+----------------
+$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf primary register
+$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf cluster show
+----------------
+
+
+On Standby Node:
+----------------
+remove everything from /var/lib/pgsql/12/data on node2 (10.190.0.24)
+[root@pg-1 ~]# su postgres
+$ cd /var/lib/pgsql/12/data
+$ rm -rf *
+$ /usr/pgsql-12/bin/repmgr -h 10.190.0.30 -U repmgr -d repmgr -f /etc/repmgr/12/repmgr.conf standby clone --dry-run
+$ /usr/pgsql-12/bin/repmgr -h 10.190.0.29 -U repmgr -d repmgr -f /etc/repmgr/12/repmgr.conf standby clone
+[root@pg-1 ~]# systemctl start postgresql-12.service
+[root@pg-1 ~]# #systemctl enable postgresql-12.service
+$ psql 
+
+postgres=# select pg_is_in_recovery();
+postgres-# ;
+ pg_is_in_recovery
+-------------------
+ t
+(1 row)
+
+Above output ensureing pg standby recovery is true.
+
+$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf standby register
+
+
+Ignore below two lines.
+recovey.conf -> means standby
+recovy.done -> means promted or recovery done
+
+
+
+
+Configrure : Witness node 3
+============================
+
+$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf witness register -h 10.190.0.24
+$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf cluster show 
+$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf cluster event
+
+
+Add below lines in visudo from root on all nodes.
+-------------------------------------------------
+# visudo
+Defaults:postgres !requiretty
+postgres ALL = NOPASSWD: /usr/bin/systemctl stop postgresql-12.service, /usr/bin/systemctl start postgresql-12.service, /usr/bin/systemctl restart postgresql-12.service, /usr/bin/systemctl reload postgresql-12.service, /usr/bin/systemctl start repmgr12.service, /usr/bin/systemctl stop repmgr12.service
+
+:wq! 
+
+Add below lines in repmgr.conf from root on all nodes.
+# vi /etc/repmgr/12/repmgr.conf
+
+
+failover='automatic'
+promote_command='/usr/pgsql-12/bin/repmgr standby promote -f /etc/repmgr/12/repmgr.conf --log-to-file'
+follow_command='/usr/pgsql-12/bin/repmgr standby follow -f /etc/repmgr/12/repmgr.conf --log-to-file --upstream-node-id=%n'
+priority=60
+monitor_interval_secs=2
+connection_check_type=ping
+reconnect_attempts=4
+reconnect_interval=8
+primary_visibility_consensus=true
+standby_disconnect_on_failover=true
+repmgrd_service_start_command='sudo /usr/bin/systemctl start repmgr12.service'
+repmgrd_service_stop_command='sudo /usr/bin/systemctl stop repmgr12.service'
+service_start_command='sudo /usr/bin/systemctl start postgresql-12.service'
+service_stop_command='sudo /usr/bin/systemctl stop postgresql-12.service'
+service_restart_command='sudo /usr/bin/systemctl restart postgresql-12.service'
+service_reload_command='sudo /usr/bin/systemctl reload postgresql-12.service'
+monitoring_history=yes
+log_status_interval=60
+
+
+$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf daemon start --dry-run
+$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf daemon start
+
+$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf daemon stop
+$ /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf daemon start
+
+
+Failover Test:
+==============
+
+On node1 =>  sudo systemctl stop postgresql-12.service
+on node2 => /usr/pgsql-12/bin/repmgr -f /etc/repmgr/12/repmgr.conf cluster show
+on Each node check logs from root : cat /var/log/messages | grep repmgr | less
